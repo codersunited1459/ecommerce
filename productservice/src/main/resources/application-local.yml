@@ -1,0 +1,43 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/product_service
+    username: postgres
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/
+      database: productService
+eureka:
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics,threaddump,heapdump,beans,configprops,circuitbreakers, circuitbreakerevents,refresh
+
+
+resilience4j.circuitbreaker:
+  instances:
+    myService:
+      registerHealthIndicator: true
+      failureRateThreshold: 50  # Percentage of failures before the circuit breaker trips
+      waitDurationInOpenState: 5000ms  # Time to wait before attempting to close the circuit breaker
+      slidingWindowSize: 10  # Number of calls to consider for calculating failure rate
+      permittedNumberOfCallsInHalfOpenState: 3  # Number of calls to allow in half-open state
+      automatic-transition-from-open-to-half-open-enabled: true
+      minimum-number-of-calls: 10
+      eventConsumerBufferSize: 10
