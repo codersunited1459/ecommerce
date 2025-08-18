@@ -10,14 +10,17 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Table(name = "user_auth_data", uniqueConstraints = { @UniqueConstraint(columnNames = "email"),
+		@UniqueConstraint(columnNames = "mobile") })
 public class UserAuthData {
 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private long id;
 
     @CreationTimestamp
@@ -26,12 +29,14 @@ public class UserAuthData {
     @UpdateTimestamp
     @Column(nullable = false)
     private Date modifiedDate;
+    @Column(unique = true)
     private String email;
+    @Column(unique = true)
     private String mobile;
     private String password;
     private String role;
 
-    private String UUID;
+    private UUID authUserId;
 
     public long getId() {
         return id;
@@ -89,25 +94,18 @@ public class UserAuthData {
         this.role = role;
     }
 
-    public String getUUID() {
-        return UUID;
-    }
+	public UUID getAuthUserId() {
+		return authUserId;
+	}
 
-    public void setUUID(String UUID) {
-        this.UUID = UUID;
-    }
+	public void setAuthUserId(UUID authUserId) {
+		this.authUserId = authUserId;
+	}
 
-    @Override
-    public String toString() {
-        return "UserAuthData{" +
-                "id=" + id +
-                ", CreatedDate=" + CreatedDate +
-                ", modifiedDate=" + modifiedDate +
-                ", email='" + email + '\'' +
-                ", mobile='" + mobile + '\'' +
-                ", password='" + password + '\'' +
-                ", role='" + role + '\'' +
-                ", UUID='" + UUID + '\'' +
-                '}';
-    }
+	@Override
+	public String toString() {
+		return "UserAuthData [id=" + id + ", CreatedDate=" + CreatedDate + ", modifiedDate=" + modifiedDate + ", email="
+				+ email + ", mobile=" + mobile + ", password=" + password + ", role=" + role + ", authUserId="
+				+ authUserId + "]";
+	}
 }

@@ -20,4 +20,4 @@ auth:
 
 user:
   service:
-    url: http://localhost:8081
+    url: localhost:8082

@@ -3,6 +3,7 @@ package com.authentication.authentication_service.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,11 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.authentication.authentication_service.dto.ApiResponse;
+import com.authentication.authentication_service.dto.AuthRegisterResponeDTO;
 import com.authentication.authentication_service.dto.UserDTO;
-import com.authentication.authentication_service.dto.UserServiceDTO;
 import com.authentication.authentication_service.factory.AuthProviderFactory;
 import com.authentication.authentication_service.feign.UserServiceClient;
+import com.authentication.authentication_service.globalException.ExternalApiException;
+import com.authentication.authentication_service.model.UserAuthData;
 import com.authentication.authentication_service.security.JwtUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,19 +36,35 @@ public class AuthController {
     private JwtUtil jwtUtil;
     @Autowired
     private UserServiceClient userServiceClient;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @PostMapping("/register")
-    public  ResponseEntity<String> register(@RequestBody UserDTO userDTO) {
-        try {
-            UserServiceDTO userService = providerFactory.getProvider().register(userDTO);
-            userServiceClient.sendUserData(userService);
+    @Transactional(rollbackFor = Exception.class)
+    public ResponseEntity<ApiResponse<UserAuthData>> register(@RequestBody UserDTO userDTO) throws Exception {
+        log.info("Request DTO : {}", objectMapper.writeValueAsString(userDTO));
 
-            return ResponseEntity.status(HttpStatus.ACCEPTED).build();
-        }catch (Exception e) {
-            return ResponseEntity.badRequest().body("Invalid JSON: " + e.getMessage());
+        // 1. Register via provider
+        AuthRegisterResponeDTO userService = providerFactory.getProvider().register(userDTO);
+        log.info("Calling the user service with {}", userService);
+
+        // 2. Call external User Service
+        ResponseEntity<UserAuthData> serviceResponse = userServiceClient.sendUserData(userService);
+        log.info("Response from user service : {}", serviceResponse);
+
+        // 3. Handle success
+        if (serviceResponse.getStatusCode().is2xxSuccessful()) {
+            ApiResponse<UserAuthData> apiResponse = new ApiResponse<>(
+                    HttpStatus.CREATED.value(),
+                    "User created successfully",
+                    null   // return actual UserAuthData
+            );
+            return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+        } else {
+            throw new ExternalApiException("Failed while posting to add user API for mobile : " + userDTO.getMobile());
         }
     }
-
     @PostMapping("/login")
     public String login(@RequestParam String mobile,@RequestParam String password) {
         return providerFactory.getProvider().login(mobile, password);

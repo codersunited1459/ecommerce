@@ -1,11 +1,7 @@
 package com.authentication.authentication_service.service;
 
 
-import com.authentication.authentication_service.dto.UserDTO;
-import com.authentication.authentication_service.dto.UserServiceDTO;
-import com.authentication.authentication_service.model.UserAuthData;
-import com.authentication.authentication_service.repository.UserAuthDataRepository;
-import com.authentication.authentication_service.security.JwtUtil;
+import java.util.UUID;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,10 +9,16 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
+import com.authentication.authentication_service.dto.UserDTO;
+import com.authentication.authentication_service.globalException.DuplicateResourceException;
+import com.authentication.authentication_service.dto.AuthRegisterResponeDTO;
+import com.authentication.authentication_service.model.UserAuthData;
+import com.authentication.authentication_service.repository.UserAuthDataRepository;
+import com.authentication.authentication_service.security.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class JwtAuthProvider implements AuthProvider, UserDetailsService {
 
     private final UserAuthDataRepository userRepo;
@@ -28,18 +30,23 @@ public class JwtAuthProvider implements AuthProvider, UserDetailsService {
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
     }
+    
 
     @Override
-    public UserServiceDTO register(UserDTO user) {
-        String uuid = UUID.randomUUID().toString();
+    public AuthRegisterResponeDTO register(UserDTO user) {
+    	
+    	if (userRepo.existsByMobile(user.getMobile())) {
+            throw new DuplicateResourceException("USER already exists: " + user.getMobile());
+        }
+        UUID uuid = UUID.randomUUID();
         UserAuthData userAuthData=new UserAuthData();
         userAuthData.setMobile(user.getMobile());
         userAuthData.setEmail(user.getEmail());
         userAuthData.setPassword(passwordEncoder.encode(user.getPassword()));
         userAuthData.setRole("USER");
-        userAuthData.setUUID(uuid);
+        userAuthData.setAuthUserId(uuid);
         userRepo.save(userAuthData);
-        return new UserServiceDTO(user.getUserName(),uuid);
+        return new AuthRegisterResponeDTO(user.getUserName(),uuid);
     }
 
     @Override

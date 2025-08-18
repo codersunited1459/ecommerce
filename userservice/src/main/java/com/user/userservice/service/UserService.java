@@ -11,7 +11,7 @@ import com.user.userservice.entities.User;
 import com.user.userservice.repository.UserRepository;
 
 @Service
-@Transactional
+
 public class UserService {
 
 	@Autowired
@@ -20,11 +20,8 @@ public class UserService {
 	@Autowired
 	private UserMapper userMapper;
 
+	@Transactional
 	public UserResponseDTO createUser(UserRequestDTO request) {
-
-		if (userRepository.existsByAuthUserId(request.getAuthUserId())) {
-			throw new RuntimeException("User already registered!");
-		}
 
 		User user = userMapper.toEntity(request);
 		User saved = userRepository.save(user);

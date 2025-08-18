@@ -8,4 +8,7 @@ import java.util.Optional;
 public interface UserAuthDataRepository  extends JpaRepository<UserAuthData, Long> {
 
     Optional<UserAuthData> findByMobile(String mobileNumber);
+    
+    boolean existsByMobile(String mobile);
+
 }

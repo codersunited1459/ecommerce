@@ -1,6 +1,6 @@
 package com.authentication.authentication_service.feign;
 
-import com.authentication.authentication_service.dto.UserServiceDTO;
+import com.authentication.authentication_service.dto.AuthRegisterResponeDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface UserServiceClient {
 
     @PostMapping("/api/users")
-    ResponseEntity sendUserData(@RequestBody UserServiceDTO userServiceDTO);
+    ResponseEntity sendUserData(@RequestBody AuthRegisterResponeDTO userServiceDTO);
 
 }
 
