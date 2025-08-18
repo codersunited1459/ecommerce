@@ -1,5 +1,7 @@
 package com.authentication.authentication_service.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,12 +68,12 @@ public class AuthController {
         }
     }
     @PostMapping("/login")
-    public String login(@RequestParam String mobile,@RequestParam String password) {
-        return providerFactory.getProvider().login(mobile, password);
+    public ResponseEntity<String> login(@RequestParam String mobile,@RequestParam String password) {
+        return ResponseEntity.ok(providerFactory.getProvider().login(mobile, password));
     }
 
     @GetMapping("checkTokenData/{token}")
-    public ResponseEntity checkTokenData(@PathVariable String token){
+    public ResponseEntity<Map<String, Object>> checkTokenData(@PathVariable String token){
 
         return ResponseEntity.ok(jwtUtil.extractAllClaims(token));
     }
