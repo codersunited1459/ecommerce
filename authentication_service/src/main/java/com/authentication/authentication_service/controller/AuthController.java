@@ -1,7 +1,7 @@
 package com.authentication.authentication_service.controller;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,13 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.authentication.authentication_service.dto.ApiResponse;
-import com.authentication.authentication_service.dto.AuthRegisterResponeDTO;
 import com.authentication.authentication_service.dto.UserDTO;
-import com.authentication.authentication_service.factory.AuthProviderFactory;
-import com.authentication.authentication_service.feign.UserServiceClient;
-import com.authentication.authentication_service.globalException.ExternalApiException;
 import com.authentication.authentication_service.model.UserAuthData;
-import com.authentication.authentication_service.security.JwtUtil;
+import com.authentication.authentication_service.service.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -28,52 +24,29 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/auth")
 @Slf4j
 public class AuthController {
-	
 
-    @Autowired
-    private  AuthProviderFactory providerFactory;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private UserServiceClient userServiceClient;
-    
-    @Autowired
-    private ObjectMapper objectMapper;
+	@Autowired
+	private AuthService authService;
 
-    @PostMapping("/register")
-    @Transactional(rollbackFor = Exception.class)
-    public ResponseEntity<ApiResponse<UserAuthData>> register(@RequestBody UserDTO userDTO) throws Exception {
-        log.info("Request DTO : {}", objectMapper.writeValueAsString(userDTO));
+	@Autowired
+	private ObjectMapper objectMapper;
 
-        // 1. Register via provider
-        AuthRegisterResponeDTO userService = providerFactory.getProvider().register(userDTO);
-        log.info("Calling the user service with {}", userService);
+	@PostMapping("/register")
+	@Transactional(rollbackFor = Exception.class)
+	public ResponseEntity<ApiResponse<UserAuthData>> register(@RequestBody UserDTO userDTO) throws Exception {
+		log.info("Request DTO : {}", objectMapper.writeValueAsString(userDTO));
 
-        // 2. Call external User Service
-        ResponseEntity<UserAuthData> serviceResponse = userServiceClient.sendUserData(userService);
-        log.info("Response from user service : {}", serviceResponse);
+		return authService.register(userDTO);
 
-        // 3. Handle success
-        if (serviceResponse.getStatusCode().is2xxSuccessful()) {
-            ApiResponse<UserAuthData> apiResponse = new ApiResponse<>(
-                    HttpStatus.CREATED.value(),
-                    "User created successfully",
-                    null   // return actual UserAuthData
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
-        } else {
-            throw new ExternalApiException("Failed while posting to add user API for mobile : " + userDTO.getMobile());
-        }
-    }
-    @PostMapping("/login")
-    public String login(@RequestParam String mobile,@RequestParam String password) {
-        return providerFactory.getProvider().login(mobile, password);
-    }
+	}
 
-    @GetMapping("checkTokenData/{token}")
-    public ResponseEntity checkTokenData(@PathVariable String token){
+	@PostMapping("/login")
+	public String login(@RequestParam String mobile, @RequestParam String password) {
+		return authService.login(mobile, password);
+	}
 
-        return ResponseEntity.ok(jwtUtil.extractAllClaims(token));
-    }
+	@GetMapping("checkTokenData/{token}")
+	public ResponseEntity checkTokenData(@PathVariable String token) {
+		return authService.checkTokenData(token);
+	}
 }
-

@@ -1,4 +1,4 @@
-package com.authentication.authentication_service.service;
+package com.authentication.authentication_service.provider;
 
 import com.authentication.authentication_service.dto.UserDTO;
 import com.authentication.authentication_service.dto.AuthRegisterResponeDTO;
@@ -7,4 +7,5 @@ public interface AuthProvider {
 
     AuthRegisterResponeDTO register(UserDTO userDTO);
     String login(String username, String password);
+    String getType();
 }
