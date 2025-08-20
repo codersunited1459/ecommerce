@@ -1,4 +1,4 @@
-package com.authentication.authentication_service.service;
+package com.authentication.authentication_service.providerImpl;
 
 
 import java.util.UUID;
@@ -13,6 +13,7 @@ import com.authentication.authentication_service.dto.UserDTO;
 import com.authentication.authentication_service.globalException.DuplicateResourceException;
 import com.authentication.authentication_service.dto.AuthRegisterResponeDTO;
 import com.authentication.authentication_service.model.UserAuthData;
+import com.authentication.authentication_service.provider.AuthProvider;
 import com.authentication.authentication_service.repository.UserAuthDataRepository;
 import com.authentication.authentication_service.security.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -69,5 +70,13 @@ public class JwtAuthProvider implements AuthProvider, UserDetailsService {
                 .roles(user.getRole())
                 .build();
     }
+
+
+	@Override
+	public String getType() {
+		return "jwt";
+	}
+    
+    
 }
 
