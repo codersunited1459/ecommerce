@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.authentication.authentication_service.dto.ApiResponse;
 import com.authentication.authentication_service.dto.AuthRegisterResponeDTO;
@@ -34,14 +35,18 @@ public class AuthService {
 	@Value("${security.auth.provider:jwt}")
 	private String defaultProvider;
 
+	@Transactional(rollbackFor = Exception.class)
 	public ResponseEntity<ApiResponse<UserAuthData>> register(UserDTO userDTO) {
 
+		// 1. Register via provider
 		AuthRegisterResponeDTO userService = providerFactory.getProvider(defaultProvider).register(userDTO);
 		log.info("Calling the user service with {}", userService);
 
+		// 2. Call external User Service
 		ResponseEntity<UserAuthData> serviceResponse = userServiceClient.sendUserData(userService);
 		log.info("Response from user service : {}", serviceResponse);
 
+		// 3. Handle success
 		if (serviceResponse.getStatusCode().is2xxSuccessful()) {
 			ApiResponse<UserAuthData> apiResponse = new ApiResponse<>(HttpStatus.CREATED.value(),
 					"User created successfully", null);

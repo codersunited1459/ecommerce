@@ -1,6 +1,7 @@
 package com.authentication.authentication_service.controller;
 
 
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.authentication.authentication_service.dto.ApiResponse;
 import com.authentication.authentication_service.dto.UserDTO;
 import com.authentication.authentication_service.model.UserAuthData;
@@ -32,7 +32,6 @@ public class AuthController {
 	private ObjectMapper objectMapper;
 
 	@PostMapping("/register")
-	@Transactional(rollbackFor = Exception.class)
 	public ResponseEntity<ApiResponse<UserAuthData>> register(@RequestBody UserDTO userDTO) throws Exception {
 		log.info("Request DTO : {}", objectMapper.writeValueAsString(userDTO));
 
@@ -40,13 +39,14 @@ public class AuthController {
 
 	}
 
-	@PostMapping("/login")
-	public String login(@RequestParam String mobile, @RequestParam String password) {
-		return authService.login(mobile, password);
-	}
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestParam String mobile,@RequestParam String password) {
+        return ResponseEntity.ok(authService.login(mobile, password));
+    }
 
-	@GetMapping("checkTokenData/{token}")
-	public ResponseEntity checkTokenData(@PathVariable String token) {
+    @GetMapping("checkTokenData/{token}")
+    public ResponseEntity<Map<String, Object>> checkTokenData(@PathVariable String token){
+
 		return authService.checkTokenData(token);
 	}
 }
